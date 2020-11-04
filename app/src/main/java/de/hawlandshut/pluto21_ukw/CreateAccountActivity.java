@@ -47,6 +47,6 @@ public class CreateAccountActivity extends AppCompatActivity implements View.OnC
     }
 
     private void doCreateAccount() {
-        Toast.makeText(getApplicationContext(), "You pressed Ceate Account (nyi).", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "You pressed Create Account (nyi).", Toast.LENGTH_LONG).show();
     }
 }

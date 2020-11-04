@@ -7,12 +7,13 @@
     android:layout_marginRight="10dp"
     android:orientation="vertical">
 
-    <TextView
+    <ListView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:ems="0"
-        android:text="Layout noch nicht fertig"
-        android:textSize="15dp" />
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/listViewMessages"
+        />
 
 </LinearLayout>
