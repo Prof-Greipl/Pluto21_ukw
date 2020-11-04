@@ -28,6 +28,9 @@ public class MainActivity extends AppCompatActivity {
 
     // TODO: Just for testing; reomve later
     private boolean mIsSignedIn = false;
+    private static final String TEST_USERNAME = "Dieter Greipl";
+    private static final String TEST_MAIL = "dieter.greipl@gmail.com";
+    private static final String TEST_PASSWORD ="123456";
 
     // The place to store posts received from server
     ArrayList<Post>  mPostList = new ArrayList<Post>();
@@ -57,15 +60,16 @@ public class MainActivity extends AppCompatActivity {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-
+                Log.d(TAG, "getView called with position " +  position);
                 View view =  super.getView(position, convertView, parent);
 
                 TextView text1, text2;
                 text1 = (TextView) view.findViewById( android.R.id.text1);
                 text2 = (TextView) view.findViewById( android.R.id.text2);
 
-                text1.setText("Zeile 1");
-                text2.setText("Zeile 2");
+                Post p = getItem( position );
+                text1.setText( p.title );
+                text2.setText( p.body );
 
                 return view;
             }
@@ -98,43 +102,73 @@ public class MainActivity extends AppCompatActivity {
         // TODO: Clean up!
         Intent intent;
         switch( item.getItemId()) {
-            case R.id.mainMenuHelp:
-                Toast.makeText(getApplicationContext(), "You pressed HELP.", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "Menue Help erkannt");
+            case R.id.mainMenuTestAuthentication:
+                Log.d(TAG, "Test Auth");
+                doTestAuthentication();
                 return true;
 
-            case R.id.mainMenuManageAccount:
-                Toast.makeText(getApplicationContext(), "You pressed MANAGE ACC.", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "Menue Manage Account erkannt");
+            case R.id.mainMenuCreateUser:
+                Log.d(TAG, "Create Test User");
+                doCreateTestUser();
                 return true;
 
-            case R.id.mainMenuGotoSignIn:
-                intent = new Intent(getApplication(),
-                        SignInActivity.class);
-                startActivity(intent);
+            case R.id.mainMenuSignIn:
+                Log.d(TAG, "SignIn");
+                doSignIn();
                 return true;
 
-            case R.id.mainMenuGotoCreateAccount:
-                intent = new Intent(getApplication(),
-                        CreateAccountActivity.class);
-                startActivity(intent);
+            case R.id.mainMenuSignOut:
+                Log.d(TAG, "SignOut");
+                doSignOut();
                 return true;
 
-            case R.id.mainMenuGotoManageAccount:
-                intent = new Intent(getApplication(),
-                        ManageAccountActivity.class);
-                startActivity(intent);
+            case R.id.mainMenuDelete:
+                Log.d(TAG, "Delete");
+                doDelete();
                 return true;
 
-            case R.id.mainMenuGotoPost:
-                intent = new Intent(getApplication(),
-                        PostActivity.class);
-                startActivity(intent);
+            case R.id.mainMenuResetPassword:
+                Log.d(TAG, "Reset Password");
+                doResetPassword();
                 return true;
+
+            case R.id.mainMenuSendActivationMail:
+                Log.d(TAG, "Send ActivationMail");
+                doSendActivationMail();
+                return true;
+
 
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void doSendActivationMail() {
+
+    }
+
+    private void doResetPassword() {
+
+    }
+
+    private void doDelete() {
+
+    }
+
+    private void doSignOut() {
+
+    }
+
+    private void doSignIn() {
+
+    }
+
+    private void doCreateTestUser() {
+
+    }
+
+    private void doTestAuthentication() {
+
     }
 
     @Override
