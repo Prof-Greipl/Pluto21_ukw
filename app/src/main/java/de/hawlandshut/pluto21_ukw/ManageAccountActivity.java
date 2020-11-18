@@ -1,5 +1,6 @@
 package de.hawlandshut.pluto21_ukw;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -9,6 +10,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class ManageAccountActivity extends AppCompatActivity implements View.OnClickListener{
     private static final String TAG = "xx ManageActivity";
@@ -54,7 +60,16 @@ public class ManageAccountActivity extends AppCompatActivity implements View.OnC
     }
 
     private void doSignOut() {
-        Toast.makeText(getApplicationContext(), "You pressed Sign Out (nyi).", Toast.LENGTH_LONG).show();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(getApplicationContext(), "No user signed in.",
+                    Toast.LENGTH_LONG).show();
+        } else {
+            FirebaseAuth.getInstance().signOut();
+            Toast.makeText(getApplicationContext(), "You are signed out.",
+                    Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
     private void doSendActivationMail() {
@@ -62,6 +77,24 @@ public class ManageAccountActivity extends AppCompatActivity implements View.OnC
     }
 
     private void doDeleteAccount() {
-        Toast.makeText(getApplicationContext(), "You pressed Delete Account (nyi).", Toast.LENGTH_LONG).show();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            user.delete().addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(getApplicationContext(), "User deleted.", Toast.LENGTH_LONG).show();
+                        finish();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "User deletion failed :" + task.getException(), Toast.LENGTH_LONG).show();
+                        Log.d(TAG, "Sign In Fehler " + task.getException());
+                        finish();
+                    }
+                }
+            });
+        } else {
+            Toast.makeText(getApplicationContext(), "You are not signed in. Pls sign in and delete then.", Toast.LENGTH_LONG).show();
+        }
+
     }
 }

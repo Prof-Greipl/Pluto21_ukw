@@ -90,6 +90,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.d(TAG, "onStart called");
+
+        // Hole den aktuellen User
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null){
+            // Kein auth. User...
+            Log.d(TAG,"on Start: No user, therefore go to SignInActivity");
+            Intent intent = new Intent( getApplication(), SignInActivity.class);
+            startActivity( intent );
+        }
+
     }
 
     /* Erzeugen des Menus aus der XML-Datei */
@@ -107,6 +117,11 @@ public class MainActivity extends AppCompatActivity {
         // TODO: Clean up!
         Intent intent;
         switch (item.getItemId()) {
+            case R.id.mainMenuGotoManageAccount:
+                intent = new Intent( getApplication(), ManageAccountActivity.class);
+                startActivity( intent );
+                return true;
+
             case R.id.mainMenuTestAuthentication:
                 Log.d(TAG, "Test Auth");
                 doTestAuthentication();
@@ -149,10 +164,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doSendActivationMail() {
-
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        user.sendEmailVerification()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getApplicationContext(), "Mail sent.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Sending mail failed :" + task.getException(), Toast.LENGTH_LONG).show();
+                            Log.d(TAG, "Send mail fehler " + task.getException());
+                        }
+                    }
+                });
     }
 
     private void doResetPassword() {
+        FirebaseAuth.getInstance().sendPasswordResetEmail(TEST_MAIL)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getApplicationContext(), "Mail sent.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Sending mail failed :" + task.getException(), Toast.LENGTH_LONG).show();
+                            Log.d(TAG, "Send reset password Fehler " + task.getException());
+                        }
+                    }
+                });
 
     }
 
@@ -161,20 +200,19 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             user.delete().addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(getApplicationContext(), "User deleted.", Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(getApplicationContext(), "User deletion failed :" + task.getException(), Toast.LENGTH_LONG).show();
-                                Log.d(TAG, "Sign In Fehler " + task.getException());
-                            }
-                        }
-                    });
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(getApplicationContext(), "User deleted.", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "User deletion failed :" + task.getException(), Toast.LENGTH_LONG).show();
+                        Log.d(TAG, "Sign In Fehler " + task.getException());
+                    }
+                }
+            });
         } else {
             Toast.makeText(getApplicationContext(), "You are not signed in. Pls sign in and delete then.", Toast.LENGTH_LONG).show();
         }
-
     }
 
     private void doSignOut() {
@@ -231,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
         if (mUser != null) {
             // User is signed in
-            Toast.makeText(getApplicationContext(), "Signed In:" + mUser.getEmail(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Signed In:" + mUser.getEmail() + " Act :" + mUser.isEmailVerified(), Toast.LENGTH_LONG).show();
         } else {
             // No user is signed in
             Toast.makeText(getApplicationContext(), "Not Signed In", Toast.LENGTH_LONG).show();
