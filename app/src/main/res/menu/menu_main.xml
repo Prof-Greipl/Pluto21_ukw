@@ -1,54 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/mainMenuGotoManageAccount"
-        android:title="Manage Account"
-        />
-
-
-    <item
-        android:id="@+id/mainMenuTestAuthentication"
-        android:title="Test Auth"
+        android:id="@+id/mainMenuGotoPost"
+        android:title="Test-Write"
         />
 
     <item
-        android:id="@+id/mainMenuCreateUser"
-        android:title="Create User"
-        />
+    android:id="@+id/mainMenuGotoManageAccount"
+    android:title="Manage Account"
+    />
 
     <item
-        android:id="@+id/mainMenuSignIn"
-        android:title="SignIn"
+        android:id="@+id/mainMenuTestWrite"
+        android:title="Test-Write"
         />
-
-
-    <item
-        android:id="@+id/mainMenuSignOut"
-        android:title="SignOut"
-        />
-
-    <item
-        android:id="@+id/mainMenuDelete"
-        android:title="Delete User"
-        />
-
-    <item
-        android:id="@+id/mainMenuResetPassword"
-        android:title="Reset Password"
-        />
-
-    <item
-        android:id="@+id/mainMenuSendActivationMail"
-        android:title="Send Activation Mail"
-        />
-
-
-
-
-
-
-
-
-
 
 </menu>

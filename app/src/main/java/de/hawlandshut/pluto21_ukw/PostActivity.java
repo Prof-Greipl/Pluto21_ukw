@@ -8,6 +8,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class PostActivity extends AppCompatActivity implements View.OnClickListener{
 
     EditText mPostTitle;
@@ -42,7 +51,16 @@ public class PostActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void doPost() {
-        Toast.makeText(getApplicationContext(), "You pressed Post (nyi).", Toast.LENGTH_LONG).show();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        Map<String, Object> postMap = new HashMap<>();
+        postMap.put("uid", user.getUid());
+        postMap.put("author", user.getEmail());
+        postMap.put("title", mPostTitle.getText().toString());
+        postMap.put("body", mPostBody.getText().toString());
+        postMap.put("timestamp", ServerValue.TIMESTAMP);
+
+        DatabaseReference mDatabase =  FirebaseDatabase.getInstance().getReference("Posts/");
+        mDatabase.push().setValue(postMap);
     }
 
 }

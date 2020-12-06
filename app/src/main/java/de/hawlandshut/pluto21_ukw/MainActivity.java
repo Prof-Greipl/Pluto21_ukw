@@ -22,8 +22,17 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ServerValue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.hawlandshut.pluto21_ukw.model.Post;
 import de.hawlandshut.pluto21_ukw.test.PostTestData;
@@ -43,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
     // Adapter beetween ListView and our list of posts
     ArrayAdapter<Post> mAdapter;
 
+    // ChildeEventLister
+    ChildEventListener mChildEventListener;
+    Query mQuery;
+
     // UI Element deklarieren
     ListView mListView;
 
@@ -53,8 +66,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // TODO: Erzeugen und Setzen der Testdaten - remove in prod. version
-        PostTestData.createTestData();
-        mPostList = (ArrayList<Post>) PostTestData.postTestList;
+        //PostTestData.createTestData();
+        //mPostList = (ArrayList<Post>) PostTestData.postTestList;
 
         mAdapter = new ArrayAdapter<Post>(
                 this,
@@ -78,11 +91,57 @@ public class MainActivity extends AppCompatActivity {
 
                 return view;
             }
+
+
         };
 
         // Adapter mit der Listview verbinden
         mListView = (ListView) findViewById(R.id.listViewMessages);
         mListView.setAdapter(mAdapter);
+
+        // ChildEventListener initialisieren
+        mChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Log.d(TAG,"CEL: onChildAdded Key = " + dataSnapshot.getKey());
+                Post p = Post.fromSnapShot( dataSnapshot);
+                mPostList.add( p );
+                mAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                // Log.d(TAG,"CEL: onChildChanged");
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                Log.d(TAG,"CEL: onChildRemoved Key = " + dataSnapshot.getKey());
+                String key = dataSnapshot.getKey();
+                mPostList.remove(0);
+                mAdapter.notifyDataSetChanged();
+                // TODO: Schleife korrekt programmieren.
+                /* for (int i = 0; i < mPostList.size(); i++){
+                    if( key.equals( mPostList.get(i).firebaseKey)){
+                        mPostList.remove(i);
+                        break;
+                    }
+                }*/
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Log.d(TAG,"CEL: onChildMoved");
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.d(TAG,"CEL: onCancelled");
+            }
+        };
+        mQuery = FirebaseDatabase.getInstance().getReference().child("Posts/").limitToLast( 3 );
+        mQuery.addChildEventListener( mChildEventListener );
     }
 
 
@@ -90,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.d(TAG, "onStart called");
+
 
         // Hole den aktuellen User
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -122,41 +182,24 @@ public class MainActivity extends AppCompatActivity {
                 startActivity( intent );
                 return true;
 
-            case R.id.mainMenuTestAuthentication:
-                Log.d(TAG, "Test Auth");
-                doTestAuthentication();
+            case R.id.mainMenuGotoPost:
+                intent = new Intent( getApplication(), PostActivity.class);
+                startActivity( intent );
                 return true;
 
-            case R.id.mainMenuCreateUser:
-                Log.d(TAG, "Create Test User");
-                doCreateTestUser();
-                return true;
+            case R.id.mainMenuTestWrite:
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                Map<String, Object> postMap = new HashMap<>();
+                postMap.put("uid", user.getUid());
+                postMap.put("author", user.getEmail());
+                postMap.put("title", "My Title");
+                postMap.put("body", "Body");
+                postMap.put("timestamp", ServerValue.TIMESTAMP);
 
-            case R.id.mainMenuSignIn:
-                Log.d(TAG, "SignIn");
-                doSignIn();
-                return true;
+                DatabaseReference mDatabase =  FirebaseDatabase.getInstance().getReference("Posts/");
+                mDatabase.push().setValue(postMap);
 
-            case R.id.mainMenuSignOut:
-                Log.d(TAG, "SignOut");
-                doSignOut();
                 return true;
-
-            case R.id.mainMenuDelete:
-                Log.d(TAG, "Delete");
-                doDelete();
-                return true;
-
-            case R.id.mainMenuResetPassword:
-                Log.d(TAG, "Reset Password");
-                doResetPassword();
-                return true;
-
-            case R.id.mainMenuSendActivationMail:
-                Log.d(TAG, "Send ActivationMail");
-                doSendActivationMail();
-                return true;
-
 
             default:
                 return super.onOptionsItemSelected(item);

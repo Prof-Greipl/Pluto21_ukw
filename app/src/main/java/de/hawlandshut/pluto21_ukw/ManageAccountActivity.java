@@ -39,6 +39,20 @@ public class ManageAccountActivity extends AppCompatActivity implements View.OnC
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        mEmail.setText("Your E-Mail : " + user.getEmail());
+        mAccountState.setText("Verified : " + user.isEmailVerified());
+        mTechnicalId.setText("UID : " + user.getUid());
+
+        // Disable SendActivationMail Button, if account is verified
+        if (user.isEmailVerified())
+            ((Button) findViewById( R.id.manageAccountButtonSendActivationMail)).setVisibility( View.GONE );
+
+    }
+
+    @Override
     public void onClick( View v){
         switch( v.getId() ){
 
@@ -73,7 +87,19 @@ public class ManageAccountActivity extends AppCompatActivity implements View.OnC
     }
 
     private void doSendActivationMail() {
-        Toast.makeText(getApplicationContext(), "You pressed Send Act. Mail (nyi).", Toast.LENGTH_LONG).show();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        user.sendEmailVerification()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getApplicationContext(), "Mail sent.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Sending mail failed :" + task.getException(), Toast.LENGTH_LONG).show();
+                            Log.d(TAG, "Send mail fehler " + task.getException());
+                        }
+                    }
+                });
     }
 
     private void doDeleteAccount() {

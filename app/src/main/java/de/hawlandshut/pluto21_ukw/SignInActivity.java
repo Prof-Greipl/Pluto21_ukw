@@ -111,7 +111,20 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void doResetPassword() {
-        Toast.makeText(getApplicationContext(), "You pressed Reset Password (nyi).", Toast.LENGTH_LONG).show();
+        String email = mEditTextEmail.getText().toString();
+        // TODO: E-Mail auf korrekten Aufbau prüfen; eventuell Spamming vermeiden
+        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getApplicationContext(), "Mail sent.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Sending mail failed :" + task.getException(), Toast.LENGTH_LONG).show();
+                            Log.d(TAG, "Send reset password Fehler " + task.getException());
+                        }
+                    }
+                });
     }
 
     private void doCreateAccount() {
