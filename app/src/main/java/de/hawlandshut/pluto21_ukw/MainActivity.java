@@ -1,6 +1,7 @@
 package de.hawlandshut.pluto21_ukw;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -35,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.hawlandshut.pluto21_ukw.model.Post;
-import de.hawlandshut.pluto21_ukw.test.PostTestData;
+
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "xx MainActivity";
@@ -59,17 +60,17 @@ public class MainActivity extends AppCompatActivity {
     // UI Element deklarieren
     ListView mListView;
 
+    boolean mListenerIsRunning = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate called");
         setContentView(R.layout.activity_main);
 
-        // TODO: Erzeugen und Setzen der Testdaten - remove in prod. version
-        //PostTestData.createTestData();
-        //mPostList = (ArrayList<Post>) PostTestData.postTestList;
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
-        mAdapter = new ArrayAdapter<Post>(
+       mAdapter = new ArrayAdapter<Post>(
                 this,
                 android.R.layout.simple_list_item_2,
                 android.R.id.text1,
@@ -100,7 +101,41 @@ public class MainActivity extends AppCompatActivity {
         mListView.setAdapter(mAdapter);
 
         // ChildEventListener initialisieren
-        mChildEventListener = new ChildEventListener() {
+        mChildEventListener = getChildEventListener();
+        mQuery = FirebaseDatabase.getInstance().getReference().child("Posts/").limitToLast( 3 );
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart called");
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null){
+            resetApp();
+            Intent intent = new Intent( getApplication(), SignInActivity.class);
+            startActivity( intent );
+        } else {
+            if (!mListenerIsRunning){
+                mPostList.clear();
+                mQuery.addChildEventListener( mChildEventListener );
+                mListenerIsRunning = true;
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    void resetApp(){
+        if (mListenerIsRunning){
+            mQuery.removeEventListener( mChildEventListener );
+            mListenerIsRunning = false;
+        }
+        mPostList.clear();
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private ChildEventListener getChildEventListener() {
+        return new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Log.d(TAG,"CEL: onChildAdded Key = " + dataSnapshot.getKey());
@@ -118,15 +153,14 @@ public class MainActivity extends AppCompatActivity {
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
                 Log.d(TAG,"CEL: onChildRemoved Key = " + dataSnapshot.getKey());
                 String key = dataSnapshot.getKey();
-                mPostList.remove(0);
-                mAdapter.notifyDataSetChanged();
-                // TODO: Schleife korrekt programmieren.
-                /* for (int i = 0; i < mPostList.size(); i++){
-                    if( key.equals( mPostList.get(i).firebaseKey)){
+
+                for (int i = 0; i < mPostList.size(); i++) {
+                    if (key.equals(mPostList.get(i).firebaseKey)) {
                         mPostList.remove(i);
                         break;
                     }
-                }*/
+                }
+                mAdapter.notifyDataSetChanged();
 
             }
 
@@ -138,28 +172,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.d(TAG,"CEL: onCancelled");
+                mListenerIsRunning = false;
             }
         };
-        mQuery = FirebaseDatabase.getInstance().getReference().child("Posts/").limitToLast( 3 );
-        mQuery.addChildEventListener( mChildEventListener );
-    }
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart called");
-
-
-        // Hole den aktuellen User
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null){
-            // Kein auth. User...
-            Log.d(TAG,"on Start: No user, therefore go to SignInActivity");
-            Intent intent = new Intent( getApplication(), SignInActivity.class);
-            startActivity( intent );
-        }
-
     }
 
     /* Erzeugen des Menus aus der XML-Datei */
@@ -187,18 +202,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity( intent );
                 return true;
 
-            case R.id.mainMenuTestWrite:
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                Map<String, Object> postMap = new HashMap<>();
-                postMap.put("uid", user.getUid());
-                postMap.put("author", user.getEmail());
-                postMap.put("title", "My Title");
-                postMap.put("body", "Body");
-                postMap.put("timestamp", ServerValue.TIMESTAMP);
-
-                DatabaseReference mDatabase =  FirebaseDatabase.getInstance().getReference("Posts/");
-                mDatabase.push().setValue(postMap);
-
+            case R.id.mainMenuTest:
+                // TODO: Remover later
                 return true;
 
             default:
@@ -206,120 +211,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void doSendActivationMail() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        user.sendEmailVerification()
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getApplicationContext(), "Mail sent.", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Sending mail failed :" + task.getException(), Toast.LENGTH_LONG).show();
-                            Log.d(TAG, "Send mail fehler " + task.getException());
-                        }
-                    }
-                });
-    }
-
-    private void doResetPassword() {
-        FirebaseAuth.getInstance().sendPasswordResetEmail(TEST_MAIL)
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getApplicationContext(), "Mail sent.", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Sending mail failed :" + task.getException(), Toast.LENGTH_LONG).show();
-                            Log.d(TAG, "Send reset password Fehler " + task.getException());
-                        }
-                    }
-                });
-
-    }
-
-    private void doDelete() {
-        // Hole user-Objekt
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            user.delete().addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(getApplicationContext(), "User deleted.", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "User deletion failed :" + task.getException(), Toast.LENGTH_LONG).show();
-                        Log.d(TAG, "Sign In Fehler " + task.getException());
-                    }
-                }
-            });
-        } else {
-            Toast.makeText(getApplicationContext(), "You are not signed in. Pls sign in and delete then.", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void doSignOut() {
-        // Hole user-Objekt
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
-            Toast.makeText(getApplicationContext(), "No user signed in.",
-                    Toast.LENGTH_LONG).show();
-        } else {
-            FirebaseAuth.getInstance().signOut();
-            Toast.makeText(MainActivity.this, "You are signed out.",
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void doSignIn() {
-        // Hole user-Objekt
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
-            FirebaseAuth.getInstance().signInWithEmailAndPassword(TEST_MAIL, TEST_PASSWORD)
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(getApplicationContext(), "User signed in.", Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Sign-in Failed :" + task.getException(), Toast.LENGTH_LONG).show();
-                                Log.d(TAG, "Sign In Fehler " + task.getException());
-                            }
-                        }
-                    });
-        } else {
-            Toast.makeText(getApplicationContext(), "You are already signed in. Sign out first.", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void doCreateTestUser() {
-        FirebaseAuth.getInstance().createUserWithEmailAndPassword(TEST_MAIL, TEST_PASSWORD)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getApplicationContext(), "Created User", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "User Creation Failed :" + task.getException(), Toast.LENGTH_LONG).show();
-                            Log.d(TAG, "Create Account Fehler " + task.getException());
-                        }
-                    }
-                });
-    }
-
-
-    private void doTestAuthentication() {
-        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (mUser != null) {
-            // User is signed in
-            Toast.makeText(getApplicationContext(), "Signed In:" + mUser.getEmail() + " Act :" + mUser.isEmailVerified(), Toast.LENGTH_LONG).show();
-        } else {
-            // No user is signed in
-            Toast.makeText(getApplicationContext(), "Not Signed In", Toast.LENGTH_LONG).show();
-        }
-
-    }
-
+   // TODO: Consider removing..
     @Override
     protected void onResume() {
         super.onResume();
