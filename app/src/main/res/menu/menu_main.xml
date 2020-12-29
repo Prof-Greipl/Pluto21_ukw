@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/mainMenuGotoPost"
-        android:title="Test-Write"
+        android:title="Post"
         />
 
     <item
@@ -11,8 +11,8 @@
     />
 
     <item
-        android:id="@+id/mainMenuTestWrite"
-        android:title="Test-Write"
+        android:id="@+id/mainMenuTest"
+        android:title="Test"
         />
 
 </menu>

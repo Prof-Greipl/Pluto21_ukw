@@ -8,13 +8,15 @@ public class Post {
     public String title;
     public String body;
     public long timestamp;
+    public String firebaseKey;
 
-    public Post(String uid, String author, String title, String body, long timestamp) {
+    public Post(String uid, String author, String title, String body, long timestamp, String firebaseKey) {
         this.uid = uid;
         this.author = author;
         this.title = title;
         this.body = body;
         this.timestamp = timestamp;
+        this.firebaseKey = firebaseKey;
     }
 
     public static Post fromSnapShot(DataSnapshot snapShot){
@@ -22,8 +24,9 @@ public class Post {
         String title = (String) snapShot.child("title").getValue();
         String body = (String) snapShot.child("body").getValue();
         String author = (String) snapShot.child("author").getValue();
+        String firebaseKey = (String) snapShot.getKey();
 
-        Post p = new Post(uid, author, title, body, 0 );
+        Post p = new Post(uid, author, title, body, 0, firebaseKey );
         return p;
     }
 }
