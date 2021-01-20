@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 text1 = (TextView) view.findViewById(android.R.id.text1);
                 text2 = (TextView) view.findViewById(android.R.id.text2);
 
-                Post p = getItem(position);
+                Post p = getItem(getCount() -1 - position);
                 text1.setText(p.title);
                 text2.setText(p.body);
 
