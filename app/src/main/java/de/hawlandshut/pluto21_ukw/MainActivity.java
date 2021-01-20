@@ -204,7 +204,8 @@ public class MainActivity extends AppCompatActivity {
 
             case R.id.mainMenuTest:
                 // TODO: Remover later
-                return true;
+                throw new RuntimeException("Test Crash");
+
 
             default:
                 return super.onOptionsItemSelected(item);
